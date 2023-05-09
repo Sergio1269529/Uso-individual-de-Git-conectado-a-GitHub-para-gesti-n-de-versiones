@@ -7,23 +7,14 @@ package ejercicioper1;
 import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.Period;
+import java.time.format.DateTimeParseException;
+import java.util.Objects;
  class Persona {
-
-    private String nombre;
+   private String nombre;
     private String apellidos;
     private LocalDate fechaNacimiento;
 
-    public Persona(String nombre, String apellidos) throws IllegalArgumentException {
-
-        if ("".equals(nombre) || "".equals(apellidos)) {
-            throw new IllegalArgumentException();
-        } else {
-            this.nombre = nombre;
-            this.apellidos = apellidos;
-        }
-    }
-
-    public Persona(String nombre, String apellidos, String fechaNacimiento) {
+    public Persona(String nombre, String apellidos, String fechaNacimiento) throws IllegalArgumentException {
         if ("".equals(nombre) || "".equals(apellidos)) {
             throw new IllegalArgumentException();
         } else {
@@ -31,74 +22,109 @@ import java.time.Period;
             this.apellidos = apellidos;
             this.fechaNacimiento = generarFecha(fechaNacimiento);
         }
-
     }
 
-    public LocalDate generarFecha(String fecha) {
+    private LocalDate generarFecha(String fechaNacimiento) {
+        LocalDate fechaCorrecta;
+        String fechaOrdenada;
 
-        int dia;
-        int mes;
-        int anio;
-
-        if (!fecha.matches("[0-9](2)[-][0-9](2)[-][0-9](4)") && !fecha.matches("[0-9](2)[-][0-9](2)[-][0-9](4)")) {
-            throw new IllegalArgumentException();
-        } else {
+        if (fechaNacimiento.charAt(2) == fechaNacimiento.charAt(5)
+                && ((fechaNacimiento.charAt(2) == '-' || fechaNacimiento.charAt(2) == '-')
+                || (fechaNacimiento.charAt(2) == '/' || fechaNacimiento.charAt(5) == '/'))) {
+            fechaOrdenada = getFechaNacimiento('-', fechaNacimiento);
             try {
-                dia = Integer.parseInt(fecha.subSequence(0, 2).toString());
-                mes = Integer.parseInt(fecha.subSequence(3, 5).toString());
-                anio = Integer.parseInt(fecha.subSequence(6, fecha.length()).toString());
-                return LocalDate.of(anio, mes, dia);
-            } catch (NumberFormatException | DateTimeException ex1) {
+                fechaCorrecta = LocalDate.parse(fechaOrdenada);
+                return fechaCorrecta;
+            } catch (DateTimeParseException e) {
                 throw new IllegalArgumentException();
             }
+        } else {
+            throw new IllegalArgumentException();
         }
-
     }
+      
 
-    public String getFechaNacimiento(char separador) {
-        String fecha = null;
-
-        if (separador != '-' && separador != '/') {
+    public Persona(String nombre, String apellidos) {
+        if ("".equals(nombre) || "".equals(apellidos)) {
             throw new IllegalArgumentException();
         } else {
-            if (this.fechaNacimiento != null) {
-                fecha = String.format("%02d%c%02d%c%04d", this.fechaNacimiento.getDayOfMonth(),
-                        separador, this.fechaNacimiento.getMonthValue(), separador, this.fechaNacimiento.getYear());
-            }
-            return fecha;
+            this.nombre = nombre;
+            this.apellidos = apellidos;
         }
-    }
-
-    public String getFechaNacimiento() {
-        return getFechaNacimiento('-');
     }
 
     public String getNombre() {
-        return nombre;
+        return this.nombre;
     }
 
     public String getApellidos() {
-        return apellidos;
+        return this.apellidos;
     }
 
-    public void setFechaNacimiento(String fechaNacimiento) throws IllegalArgumentException {
-        this.fechaNacimiento = generarFecha(fechaNacimiento);
+    public String getFechaNacimiento() {
+        return fechaNacimiento.toString();
     }
 
-    public int getEdadEnFecha(String cadenaFecha) throws IllegalArgumentException {
-        int edadEnFecha = 0;
-        LocalDate fechaNacimiento = generarFecha(cadenaFecha);
-        Period periodo;
+    public String getFechaNacimiento(char separador, String fechaNacimiento) {
+        String fechaCorrecta;
+        try {
+            fechaCorrecta = fechaNacimiento.substring(6, fechaNacimiento.length()) + separador + fechaNacimiento.substring(3, 5) + separador + fechaNacimiento.substring(0, 2);
+        } catch (NullPointerException e) {
+            fechaCorrecta = "null";
+            return fechaCorrecta;
+        }
+        return fechaCorrecta;
+    }
 
-        if (cadenaFecha == null) {
-            edadEnFecha = -1;
-        } else {
-            this.fechaNacimiento = generarFecha(cadenaFecha);
-            periodo = Period.between(fechaNacimiento, LocalDate.now());
-            edadEnFecha = periodo.getYears();
+    public String setFechaNacimiento(String fechaNacimiento) {
+        String nuevaFecha;
+        generarFecha(fechaNacimiento);
+        nuevaFecha = generarFecha(fechaNacimiento).toString();
+        return nuevaFecha;
+    }
 
+    public int getEdadEnFecha(String cadenaFecha) {
+        int edad;
+
+        if (this.fechaNacimiento == null) {
+            return -1;
         }
 
-        return edadEnFecha;
+        LocalDate nuevaFecha = generarFecha(cadenaFecha);
+        try {
+            edad = nuevaFecha.getYear() - this.fechaNacimiento.getYear();
+            if (this.fechaNacimiento.getMonthValue() > nuevaFecha.getMonthValue()
+                    || (this.fechaNacimiento.getMonthValue() == nuevaFecha.getMonthValue()
+                    && this.fechaNacimiento.getDayOfMonth() > nuevaFecha.getDayOfMonth())) {
+                edad--;
+            }
+            return edad;
+        } catch (IllegalArgumentException e) {
+            return -1;
+        }
+    }
+
+    public int getEdad() {
+        int edad;
+        Period periodo = null;
+
+        if (this.fechaNacimiento == null) {
+            return -1;
+        } else {
+            try {
+
+                periodo = periodo.between(fechaNacimiento, LocalDate.now());
+                edad = periodo.getYears();
+                if (edad < 0) {
+                    edad = -1;
+                }
+                return edad;
+            } catch (IllegalArgumentException e) {
+                return -1;
+            }
+
+        }
+      
+
     }
 }
